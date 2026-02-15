@@ -3,6 +3,11 @@ using ApartmentPlanner.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ApartmentPlanner.Api.Application.DTOs;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging.Abstractions;
 
 
 namespace ApartmentPlanner.Api.Application.Services;
@@ -33,5 +38,43 @@ public class AuthService
         _context.Users.Add(user);
 
         await _context.SaveChangesAsync();
+    }
+
+    private string GenerateJwtToken(User user)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Chave aqui"));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email)
+        };
+        var token = new JwtSecurityToken(
+            issuer: "ApartmentPlanner",
+            audience: "ApartmentPlanner",
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(2),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public async Task<AuthResponse> LoginAsync(LoginRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user == null)
+            throw new Exception("Usuário não encontrado.");
+
+        var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+        if (result == PasswordVerificationResult.Failed)
+            throw new Exception("Senha incorreta.");
+
+        var token = GenerateJwtToken(user);
+
+        return new AuthResponse
+        {
+            Token = token
+        };
     }
 }
