@@ -10,7 +10,7 @@ namespace ApartmentPlanner.Api.Application.Services;
 public class ContributionService
 {
     private readonly AppDbContext _context;
-    public ContributionService (AppDbContext context)
+    public ContributionService(AppDbContext context)
     {
         _context = context;
     }
@@ -59,5 +59,24 @@ public class ContributionService
             throw new Exception("Apartamento não foi encontrado.");
         }
         return await CalculateBalanceAsync(apartmentId);
+    }
+
+    public async Task<List<ContributionResponse>> GetContributionsAsync(int apartmentId)
+    {
+        var apartmentExists = await _context.Apartments.AnyAsync(ap => ap.Id == apartmentId);
+        if (apartmentExists == false)
+        {
+            throw new Exception("Apartamento não foi encontrado.");
+        }
+
+        var contributions = await _context.Contributions.Where(c => c.ApartmentId == apartmentId).OrderByDescending(c => c.Date).Select(c => new ContributionResponse
+        {
+            Id = c.Id,
+            Amount = c.Amount,
+            Type = c.Type.ToString(),
+            Date = c.Date
+        }).ToListAsync();
+
+        return contributions;
     }
 }
