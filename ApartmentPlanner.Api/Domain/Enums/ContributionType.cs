@@ -3,6 +3,6 @@
     public enum ContributionType
     {
         Deposit = 1,
-        Whitdrawal = 2
+        Withdrawal = 2
     }
 }
