@@ -1,3 +1,4 @@
+using ApartmentPlanner.Api.Application.Services;
 using ApartmentPlanner.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddScoped<ApartmentService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
