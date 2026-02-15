@@ -15,14 +15,14 @@ public class ContributionService
         _context = context;
     }
 
-    public async Task CreateContributionAsync(CreateContributionRequest request)
+    public async Task CreateContributionAsync(CreateContributionRequest request, int userId)
     {
         var apartment = await _context.Apartments.FirstOrDefaultAsync(ap => ap.Id == request.ApartmentId);
         if (apartment == null)
         {
             throw new Exception("Apartamento não foi encontrado.");
         }
-        var isMember = await _context.ApartmentMembers.AnyAsync(m => m.ApartmentId == request.ApartmentId && m.UserId == request.UserId);
+        var isMember = await _context.ApartmentMembers.AnyAsync(m => m.ApartmentId == request.ApartmentId && m.UserId == userId);
         if (isMember == false)
         {
             throw new Exception("usuario não é membro do apartamento.");
@@ -38,7 +38,7 @@ public class ContributionService
                 throw new Exception("Saldo insuficiente para realizar a retirada.");
         }
 
-        var contribution = new Contribution(request.ApartmentId, request.UserId, request.Amount, type);
+        var contribution = new Contribution(request.ApartmentId, userId, request.Amount, type);
 
         _context.Contributions.Add(contribution);
         await _context.SaveChangesAsync();

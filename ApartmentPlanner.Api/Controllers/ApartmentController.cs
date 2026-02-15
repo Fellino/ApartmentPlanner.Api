@@ -2,9 +2,11 @@
 using ApartmentPlanner.Api.Application.Services;
 using ApartmentPlanner.Api.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApartmentPlanner.Api.Controllers;
 
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class ApartmentController : ControllerBase

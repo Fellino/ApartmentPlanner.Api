@@ -16,11 +16,13 @@ public class AuthService
 {
     private readonly AppDbContext _context;
     private readonly PasswordHasher<User> _passwordHasher;
+    private readonly IConfiguration _configuration;
 
-    public AuthService(AppDbContext context)
+    public AuthService(AppDbContext context, IConfiguration configuration)
     {
         _context = context;
         _passwordHasher = new PasswordHasher<User>();
+        _configuration = configuration;
     }
 
     public async Task RegisterAsync(RegisterRequest request)
@@ -42,7 +44,7 @@ public class AuthService
 
     private string GenerateJwtToken(User user)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Chave aqui"));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var claims = new[]
         {
@@ -50,8 +52,8 @@ public class AuthService
             new Claim(ClaimTypes.Email, user.Email)
         };
         var token = new JwtSecurityToken(
-            issuer: "ApartmentPlanner",
-            audience: "ApartmentPlanner",
+            issuer: _configuration["JwtSettings:Issuer"],
+            audience: _configuration["JwtSettings:Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddHours(2),
             signingCredentials: credentials
