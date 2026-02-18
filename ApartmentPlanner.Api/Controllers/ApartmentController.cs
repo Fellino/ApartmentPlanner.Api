@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ApartmentPlanner.Api.Application.DTOs;
 using ApartmentPlanner.Api.Application.Services;
-using ApartmentPlanner.Api.Application.DTOs;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace ApartmentPlanner.Api.Controllers;
@@ -48,5 +47,18 @@ public class ApartmentController : ControllerBase
         var userId = int.Parse(claim.Value);
         var contributions = await _contributionService.GetContributionsAsync(id, userId);
         return Ok(contributions);
+    }
+    [Authorize]
+    [HttpPost("{id}/members")]
+    public async Task<IActionResult> AddMember(int id, AddMemberRequest request)
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null)
+            return Unauthorized();
+
+        var userId = int.Parse(claim.Value);
+
+        await _apartmentService.AddMemberAsync(id, userId, request.UserId);
+        return StatusCode(201);
     }
 }

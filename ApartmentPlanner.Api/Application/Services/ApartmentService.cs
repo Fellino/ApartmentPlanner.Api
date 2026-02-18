@@ -1,6 +1,7 @@
 ﻿using ApartmentPlanner.Api.Domain.Entities;
 using ApartmentPlanner.Api.Infrastructure.Data;
 using ApartmentPlanner.Api.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApartmentPlanner.Api.Application.Services;
 
@@ -27,5 +28,28 @@ public class ApartmentService
 
         return apartment.Id;
     }
+    public async Task AddMemberAsync(int apartmentId, int ownerUserId, int newMemberUserId)
+    {
+        //valida se o apartamento existe
+        var apartmentExists = await _context.Apartments.AnyAsync(ap => ap.Id == apartmentId);
+        if (apartmentExists == false)
+            throw new Exception("Apartamento não encontrado.");
+        //valida se o usuário é proprietário do apartamento
+        var isOwner = await _context.ApartmentMembers.AnyAsync(m => m.ApartmentId == apartmentId && m.UserId == ownerUserId && m.Role == MemberRole.Owner);
+        if (isOwner == false)
+            throw new Exception("Apenas o proprietário pode adicionar membros.");
+        //valida se o usuário a ser adicionado existe
+        var userExists = await _context.Users.AnyAsync(u => u.Id == newMemberUserId);
+        if (userExists == false)
+            throw new Exception("Usuário a ser adicionado não encontrado.");
+        //valida se o usuário já é membro do apartamento
+        var isMember = await _context.ApartmentMembers.AnyAsync(u => u.Id == newMemberUserId);
+        if (isMember)
+            throw new Exception("Usuário já é membro do apartamento.");
 
+        var member = new ApartmentMember(apartmentId, newMemberUserId, MemberRole.Member);
+        _context.ApartmentMembers.Add(member);
+
+        await _context.SaveChangesAsync();
+    }
 }
