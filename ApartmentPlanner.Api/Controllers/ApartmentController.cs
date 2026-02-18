@@ -3,6 +3,7 @@ using ApartmentPlanner.Api.Application.Services;
 using ApartmentPlanner.Api.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace ApartmentPlanner.Api.Controllers;
 
@@ -30,13 +31,22 @@ public class ApartmentController : ControllerBase
     [HttpGet("{id}/balance")]
     public async Task<IActionResult> GetBalance(int id)
     {
-        var balance = await _contributionService.GetBalanceAsync(id);
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null)
+            return Unauthorized();
+        var userId = int.Parse(claim.Value);
+
+        var balance = await _contributionService.GetBalanceAsync(id, userId);
         return Ok(new BalanceResponse { Balance = balance });
     }
     [HttpGet("{id}/contributions")]
     public async Task<IActionResult> GetContributions(int id)
     {
-        var contributions = await _contributionService.GetContributionsAsync(id);
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null)
+            return Unauthorized();
+        var userId = int.Parse(claim.Value);
+        var contributions = await _contributionService.GetContributionsAsync(id, userId);
         return Ok(contributions);
     }
 }

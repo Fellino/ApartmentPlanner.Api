@@ -51,18 +51,30 @@ public class ContributionService
             .SumAsync(c => c.Amount);
         return totalDeposits - totalWithdrawals;
     }
-    public async Task<decimal> GetBalanceAsync(int apartmentId)
+
+    private async Task ValidateMemberAsync(int apartmentId, int userId)
+    {
+        var isMember = await _context.ApartmentMembers
+            .AnyAsync(m => m.ApartmentId == apartmentId && m.UserId == userId);
+
+        if (isMember == false)
+            throw new Exception("Usuario não pertence ao apartamento.");
+    }
+    public async Task<decimal> GetBalanceAsync(int apartmentId, int userId)
     {
         var apartment = await _context.Apartments.FirstOrDefaultAsync(ap => ap.Id == apartmentId);
         if (apartment == null)
         {
             throw new Exception("Apartamento não foi encontrado.");
         }
+        await ValidateMemberAsync(apartmentId, userId);
         return await CalculateBalanceAsync(apartmentId);
     }
 
-    public async Task<List<ContributionResponse>> GetContributionsAsync(int apartmentId)
+    public async Task<List<ContributionResponse>> GetContributionsAsync(int apartmentId, int userId)
     {
+        await ValidateMemberAsync(apartmentId, userId);
+
         var apartmentExists = await _context.Apartments.AnyAsync(ap => ap.Id == apartmentId);
         if (apartmentExists == false)
         {
