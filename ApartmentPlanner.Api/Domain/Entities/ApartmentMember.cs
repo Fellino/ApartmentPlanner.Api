@@ -10,6 +10,9 @@ namespace ApartmentPlanner.Api.Domain.Entities
         public MemberRole Role { get; private set; }
         public DateTime JoinedAt { get; private set; }
 
+        public User User { get; private set; }
+        public Apartment Apartment { get; private set; }
+
         private ApartmentMember() { } // <- usado no EF core (IMPORTANTE)
 
         public ApartmentMember(int apartmentId, int userId, MemberRole role)

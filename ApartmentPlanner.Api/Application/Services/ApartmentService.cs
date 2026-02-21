@@ -2,6 +2,7 @@
 using ApartmentPlanner.Api.Infrastructure.Data;
 using ApartmentPlanner.Api.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using ApartmentPlanner.Api.Application.DTOs;
 
 namespace ApartmentPlanner.Api.Application.Services;
 
@@ -51,5 +52,35 @@ public class ApartmentService
         _context.ApartmentMembers.Add(member);
 
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<MemberResponse>>
+        GetMembersAsync(int apartmentId, int userId)
+    {
+        var isMember = await _context.ApartmentMembers.AnyAsync(m => m.ApartmentId == apartmentId && m.UserId == userId);
+        if (isMember == false)
+            throw new Exception("Usuário não pertence a este apartamento");
+
+        var members = await _context.ApartmentMembers.Where(m => m.ApartmentId == apartmentId).Select(m => new MemberResponse
+        {
+            UserId = m.UserId,
+            Name = m.User.Name,
+            Email = m.User.Email,
+            Role = m.Role.ToString()
+        }).ToListAsync();
+
+        return members;
+    }
+
+    public async Task<List<MyApartmentResponse>>
+        GetApartmentsAsync(int userId)
+    {
+        var apartments = await _context.ApartmentMembers.Where(m => m.UserId == userId).Select(m => new MyApartmentResponse
+        {
+            ApartmentId = m.ApartmentId,
+            Name = m.Apartment.Name,
+            Role = m.Role.ToString()
+        }).ToListAsync();
+        return apartments;
     }
 }

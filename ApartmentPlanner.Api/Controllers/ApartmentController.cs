@@ -61,4 +61,30 @@ public class ApartmentController : ControllerBase
         await _apartmentService.AddMemberAsync(id, userId, request.UserId);
         return StatusCode(201);
     }
+    [Authorize]
+    [HttpGet("{id}/members")]
+    public async Task<IActionResult> GetMembers(int id)
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null)
+            return Unauthorized();
+
+        var userId = int.Parse(claim.Value);
+        var members = await _apartmentService.GetMembersAsync(id, userId);
+
+        return Ok(members);
+
+    }
+    [Authorize]
+    [HttpGet("{id}/my-apartment")]
+    public async Task<IActionResult> GetMyApartments()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null)
+            return Unauthorized();
+
+        var userId = int.Parse(claim.Value);
+        var apartments = await _apartmentService.GetApartmentsAsync(userId);
+        return Ok(apartments);
+    }
 }
